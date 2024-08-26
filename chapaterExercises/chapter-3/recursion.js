@@ -1,3 +1,5 @@
+// EXERCISE---------------------------------------------------------------3.2
+
 // We’ve seen that we can use % (the remainder operator) to test whether a number is even or odd by using % 2 to see whether it’s divisible by two. Here’s another way to define whether a positive whole number is even or odd:
 // • Zero is even.
 // • One is odd.
