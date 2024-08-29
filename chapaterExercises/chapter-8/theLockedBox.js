@@ -1,3 +1,5 @@
+// EXERCISE---------------------------------------------------------------8.2
+
 // Consider the following (rather contrived) object:
 const box = new (class {
   locked = true;
