@@ -17,8 +17,11 @@ function Promise_all(promises) {
           pending--;
           if (pending == 0) resolve(results);
         })
+        // then() is called on the promise to handle its resolution. The result of the resolved promise is stored in the results array at the corresponding index. The pending counter is decremented each time a promise resolves. If pending becomes 0, meaning all promises have resolved, the outer promise is resolved with the results array.
         .catch(reject);
+      // catch() is used to handle any promise rejection. If any promise in the array rejects, the outer promise is immediately rejected with that rejection reason.
     }
     if (promises.length == 0) resolve(results);
+    // If the promises array is empty (i.e., promises.length == 0), it directly resolves with an empty array results.
   });
 }
