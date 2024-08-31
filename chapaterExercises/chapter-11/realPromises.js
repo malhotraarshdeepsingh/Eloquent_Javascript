@@ -1,4 +1,4 @@
-// EXERCISE---------------------------------------------------------------8.2
+// EXERCISE---------------------------------------------------------------11.2
 
 // Rewrite the function from the previous exercise without async/await, using plain Promise methods.
 // In this style, using Promise.all will be more convenient than trying to model a loop over the logfiles. In the async function, just using await in a loop is simpler. If reading a file takes some time, which of these two approaches will take the least time to run?

@@ -1,4 +1,4 @@
-// EXERCISE---------------------------------------------------------------8.3
+// EXERCISE---------------------------------------------------------------11.3
 
 // As we saw, given an array of promises, Promise.all returns a promise that waits for all of the promises in the array to finish. It then succeeds, yielding an array of result values. If a promise in the array fails, the promise returned by all fails too, passing on the failure reason from the failing promise.
 
