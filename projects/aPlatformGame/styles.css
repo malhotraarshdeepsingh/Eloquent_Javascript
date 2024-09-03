@@ -47,3 +47,6 @@ After touching lava, the player turns dark red, suggesting scorching. When the l
   max-height: 450px;
   position: relative;
 }
+.monster {
+  background: purple;
+}

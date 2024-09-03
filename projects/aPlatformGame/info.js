@@ -32,7 +32,7 @@ let simpleLevelPlan = `
 // Reading a level
 // The following class stores a level object. Its argument should be the string that defines the level.
 
-class Level {
+var Level = class Level {
   constructor(plan) {
     let rows = plan
       .trim()
@@ -61,7 +61,7 @@ class Level {
 // The position of the actor is stored as a Vec object. This is a two-dimensional vector, an object with x and y properties, as seen in the exercises of Chapter 6.
 // As the game runs, actors will end up in different places or even disappear entirely (as coins do when collected). We’ll use a State class to track the state of a running game.
 
-class State {
+var State = class State {
   constructor(level, actors, status) {
     this.level = level;
     this.actors = actors;
@@ -84,7 +84,7 @@ class State {
 // Actor classes have a static create method that is used by the Level constructor to create an actor from a character in the level plan. It is given the coordinates of the character and the character itself, which is necessary because the Lava class handles several different characters.
 
 // This is the Vec class that we’ll use for our two-dimensional values, such as the position and size of actors.
-class Vec {
+var Vec = class Vec {
   constructor(x, y) {
     this.x = x;
     this.y = y;
@@ -101,7 +101,7 @@ class Vec {
 // The different types of actors get their own classes, since their behavior is very different. Let’s define these classes. We’ll get to their update methods later.
 
 // The player class has a speed property that stores its current speed to simulate momentum and gravity.
-class Player {
+var Player = class Player {
   constructor(pos, speed) {
     this.pos = pos;
     this.speed = speed;
@@ -119,7 +119,7 @@ Player.prototype.size = new Vec(0.8, 1.5);
 
 // When constructing a Lava actor, we need to initialize the object differently depending on the character it is based on. Dynamic lava moves along at its current speed until it hits an obstacle. At that point, if it has a reset property, it will jump back to its start position (dripping). If it does not, it will invert its speed and continue in the other direction(bouncing).
 // The create method looks at the character that the Level constructor passes and creates the appropriate lava actor.
-class Lava {
+var Lava = class Lava {
   constructor(pos, speed, reset) {
     this.pos = pos;
     this.speed = speed;
@@ -141,7 +141,7 @@ class Lava {
 Lava.prototype.size = new Vec(1, 1);
 
 // Coin actors are relatively simple. They mostly just sit in their place. But to liven up the game a little, they are given a “wobble”, a slight vertical back-and-forth motion. To track this, a coin object stores a base position as well as a wobble property that tracks the phase of the bouncing motion. Together, these determine the coin’s actual position (stored in the pos property).
-class Coin {
+var Coin = class Coin {
   constructor(pos, basePos, wobble) {
     this.pos = pos;
     this.basePos = basePos;
@@ -190,8 +190,9 @@ function elt(name, attrs, ...children) {
   }
   return dom;
 }
+
 // A display is created by giving it a parent element to which it should append itself and a level object.
-class DOMDisplay {
+var DOMDisplay = class DOMDisplay {
   constructor(parent, level) {
     this.dom = elt("div", { class: "game" }, drawGrid(level));
     this.actorLayer = null;
@@ -289,6 +290,7 @@ Level.prototype.touches = function (pos, size, type) {
   let xEnd = Math.ceil(pos.x + size.x);
   let yStart = Math.floor(pos.y);
   let yEnd = Math.ceil(pos.y + size.y);
+
   for (let y = yStart; y < yEnd; y++) {
     for (let x = xStart; x < xEnd; x++) {
       let isOutside = x < 0 || x >= this.width || y < 0 || y >= this.height;
@@ -296,6 +298,7 @@ Level.prototype.touches = function (pos, size, type) {
       if (here == type) return true;
     }
   }
+
   return false;
 };
 // The method computes the set of grid squares that the body overlaps with by using Math.floor and Math.ceil on its coordinates. Remember that grid squares are 1 by 1 units in size. By rounding the sides of a box up and down, we get the range of background squares that the box touches.
@@ -305,15 +308,18 @@ State.prototype.update = function (time, keys) {
   let actors = this.actors.map((actor) => actor.update(time, this, keys));
   let newState = new State(this.level, actors, this.status);
   if (newState.status != "playing") return newState;
+
   let player = newState.player;
   if (this.level.touches(player.pos, player.size, "lava")) {
     return new State(this.level, actors, "lost");
   }
+
   for (let actor of actors) {
     if (actor != player && overlap(actor, player)) {
       newState = actor.collide(newState);
     }
   }
+
   return newState;
 };
 // The method is passed a time step and a data structure that tells it which keys are being held down. The first thing it does is call the update method on all actors, producing an array of updated actors.
@@ -346,6 +352,7 @@ Coin.prototype.collide = function (state) {
 // Actor objects’ update methods take as arguments the time step, the state object, and a keys object. The one for the Lava actor type ignores the keys object.
 Lava.prototype.update = function (time, state) {
   let newPos = this.pos.plus(this.speed.times(time));
+
   if (!state.level.touches(newPos, this.size, "wall")) {
     return new Lava(newPos, this.speed, this.reset);
   } else if (this.reset) {
@@ -362,6 +369,7 @@ const wobbleSpeed = 8,
 Coin.prototype.update = function (time) {
   let wobble = this.wobble + time * wobbleSpeed;
   let wobblePos = Math.sin(wobble) * wobbleDist;
+
   return new Coin(
     this.basePos.plus(new Vec(0, wobblePos)),
     this.basePos,
@@ -377,15 +385,20 @@ const jumpSpeed = 17;
 
 Player.prototype.update = function (time, state, keys) {
   let xSpeed = 0;
+
   if (keys.ArrowLeft) xSpeed -= playerXSpeed;
   if (keys.ArrowRight) xSpeed += playerXSpeed;
+
   let pos = this.pos;
   let movedX = pos.plus(new Vec(xSpeed * time, 0));
+
   if (!state.level.touches(movedX, this.size, "wall")) {
     pos = movedX;
   }
+
   let ySpeed = this.speed.y + time * gravity;
   let movedY = pos.plus(new Vec(0, ySpeed * time));
+
   if (!state.level.touches(movedY, this.size, "wall")) {
     pos = movedY;
   } else if (keys.ArrowUp && ySpeed > 0) {
@@ -393,8 +406,85 @@ Player.prototype.update = function (time, state, keys) {
   } else {
     ySpeed = 0;
   }
+
   return new Player(pos, new Vec(xSpeed, ySpeed));
 };
 // The horizontal motion is computed based on the state of the left and right arrow keys. When there’s no wall blocking the new position created by this motion, it is used. Otherwise, the old position is kept.
 // Vertical motion works in a similar way but has to simulate jumping and gravity. The player’s vertical speed (ySpeed) is first accelerated to account for gravity.
 // We check for walls again. If we don’t hit any, the new position is used. If there is a wall, there are two possible outcomes. When the up arrow is pressed and we are moving down (meaning the thing we hit is below us), the speed is set to a relatively large, negative value. This causes the player to jump. If that is not the case, the player simply bumped into something, and the speed is set to zero. The gravity strength, jumping speed, and other constants in the game were determined by simply trying out some numbers and seeing which ones felt right. You can try experimenting with them.
+
+// Tracking keys
+// For a game like this, we do not want keys to take effect once per key-press. Rather, we want their effect (moving the player figure) to stay active as long as they are held.
+// We need to set up a key handler that stores the current state of the left, right, and up arrow keys. We will also want to call preventDefault for those keys so that they don’t end up scrolling the page.
+// The following function, when given an array of key names, will return an object that tracks the current position of those keys. It registers event handlers for "keydown" and "keyup" events and, when the key code in the event is present in the set of codes that it is tracking, updates the object.
+function trackKeys(keys) {
+  let down = Object.create(null);
+
+  function track(event) {
+    if (keys.includes(event.key)) {
+      down[event.key] = event.type == "keydown";
+      event.preventDefault();
+    }
+  }
+
+  window.addEventListener("keydown", track);
+  window.addEventListener("keyup", track);
+
+  return down;
+}
+const arrowKeys = trackKeys(["ArrowLeft", "ArrowRight", "ArrowUp"]);
+// The same handler function is used for both event types. It looks at the event object’s type property to determine whether the key state should be updated to true ("keydown") or false ("keyup").
+
+// Running the game
+// The requestAnimationFrame function, which we saw in Chapter 14, provides a good way to animate a game. But its interface is quite primitive— using it requires us to track the time at which our function was called the last time around and call requestAnimationFrame again after every frame.
+// Let’s define a helper function that wraps all that in a convenient interface and allows us to simply call runAnimation, giving it a function that expects a time difference as an argument and draws a single frame. When the frame function returns the value false, the animation stops.
+function runAnimation(frameFunc) {
+  let lastTime = null;
+
+  function frame(time) {
+    if (lastTime != null) {
+      let timeStep = Math.min(time - lastTime, 100) / 1000;
+      if (frameFunc(timeStep) === false) return;
+    }
+    lastTime = time;
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+}
+// I have set a maximum frame step of 100 milliseconds (one-tenth of a second). When the browser tab or window with our page is hidden, requestAnimationFrame calls will be suspended until the tab or window is shown again. In this case, the difference between lastTime and time will be the entire time in which the page was hidden. Advancing the game by that much in a single step would look silly and might cause weird side effects, such as the player falling through the floor.
+// The function also converts the time steps to seconds, which are an easier quantity to think about than milliseconds.
+// The runLevel function takes a Level object and a display constructor and returns a promise. It displays the level (in document.body) and lets the user play through it. When the level is finished (lost or won), runLevel waits one more second (to let the user see what happens) and then clears the display, stops the animation, and resolves the promise to the game’s end status.
+function runLevel(level, Display) {
+  let display = new Display(document.body, level);
+  let state = State.start(level);
+  let ending = 1;
+
+  return new Promise((resolve) => {
+    runAnimation((time) => {
+      state = state.update(time, arrowKeys);
+      display.syncState(state);
+      if (state.status == "playing") {
+        return true;
+      } else if (ending > 0) {
+        ending -= time;
+        return true;
+      } else {
+        display.clear();
+        resolve(state.status);
+        return false;
+      }
+    });
+  });
+}
+// Game over
+// It’s traditional for platform games to have the player start with a limited number of lives and subtract one life each time they die. When the player is out of lives, the game restarts from the beginning. Adjust runGame to implement lives. Have the player start with three. Output the current number of lives (using console.log) every time a level starts.
+// A game is a sequence of levels. Whenever the player dies, the current level is restarted. When a level is completed, we move on to the next level. This can be expressed by the following function, which takes an array of level plans (strings) and a display constructor:
+async function runGame(plans, Display) {
+  for (let level = 0; level < plans.length; ) {
+    let status = await runLevel(new Level(plans[level]), Display);
+    if (status == "won") level++;
+  }
+  console.log("You've won!");
+}
+// Because we made runLevel return a promise, runGame can be written using an async function, as shown in Chapter 11. It returns another promise, which resolves when the player finishes the game.
